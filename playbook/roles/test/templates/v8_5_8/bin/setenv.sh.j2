@@ -1,0 +1,34 @@
+#!/bin/sh
+
+#-----------------------
+# set Tomcat environment
+#-----------------------
+TOMCAT_VER="{{ tomcat_version[1:]|replace("_", ".") }}"
+ORACLE_VER="{{ tomcat_oracle_version }}"
+JAVA_VER="{{ tomcat_jdk_version }}"
+
+CATALINA_HOME=/usr/local/tomcat
+CATALINA_BASE=/usr/local/tomcat
+CATALINA_LOG={{ tomcat_log_path }}
+CATALINA_PID=${CATALINA_LOG}/tomcat.pid
+JAVA_HOME=/usr/java/jdk
+LANG=C
+
+export CATALINA_HOME
+export CATALINA_BASE
+export CATALINA_PID
+export JAVA_HOME
+export LANG
+
+#---------------------
+# set Java environment
+#---------------------
+# set CATALINA_OPTS
+XMS="{{ tomcat_startup_settings.heap_size.xms }}"
+XMX="{{ tomcat_startup_settings.heap_size.xmx }}"
+XGC="{% if tomcat_startup_settings.gc_opts %}{% for gc_opt in tomcat_startup_settings.gc_opts %}{{ gc_opt }}{% if not loop.last %} {% endif %}{% endfor %}{% endif %}"
+GCLOG="{% if tomcat_startup_settings.gc_logs %}{% for gc_log in tomcat_startup_settings.gc_logs %}{{ gc_log }}{% if not loop.last %} {% endif %}{% endfor %}{% endif %}"
+CATALINA_OPTS="-server $XMS $XMX $XGC $GCLOG {% if tomcat_startup_settings.catalina_opts %}{% for catalina_opt in tomcat_startup_settings.catalina_opts %}{{ catalina_opt }}{% if not loop.last %} {% endif %}{% endfor %}{% endif %}"
+
+# set JAVA_OPTS
+JAVA_OPTS="{% for java_opt in tomcat_startup_settings.java_opts %}{{ java_opt }}{% if not loop.last and loop.length > 0 %} {% endif %}{% endfor %}"

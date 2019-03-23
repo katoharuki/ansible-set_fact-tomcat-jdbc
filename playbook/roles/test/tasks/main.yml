@@ -1,0 +1,91 @@
+---
+# file: tasks/main.yml
+
+# Tomcatディレクトリの作成
+- name: create tomcat server directories
+  file:
+    path: "{{ item.path }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "0{{ item.mode }}"
+    state: directory
+  with_items: "{{ tomcat_server_directories }}"
+
+#
+# Tomcatのインストール
+#
+- name: Check exists Tomcat
+  shell: ls /usr/local/tomcat/
+  register: check_tomcat
+  with_items: "{{ tomcat_version_dot }}"
+  ignore_errors: True
+
+- name: download tomcat archive
+  get_url:
+    url: "http://archive.apache.org/dist/tomcat/tomcat-8/v{{item}}/bin/apache-tomcat-{{item}}.tar.gz"
+    dest: "/tmp/apache-tomcat-{{item}}.tar.gz"
+    force: true
+  when: check_tomcat|failed
+  with_items: "{{ tomcat_version_dot }}"
+
+- name: extract tomcat archive
+  shell: tar xzf /tmp/apache-tomcat-{{item}}.tar.gz -C /usr/local && mv /usr/local/apache-tomcat-{{item}} /usr/local/tomcat
+  when: check_tomcat|failed
+  with_items: "{{ tomcat_version_dot }}"
+  ignore_errors: True
+
+#
+# JDKのインストール
+#
+- name: check oracle jdk
+  shell: ls /usr/java/jdk
+  register: check_jdk
+  ignore_errors: True
+
+- name: download oracle jdk archive
+  get_url:
+    url: https://download.oracle.com/otn/java/jdk/8u141-b15/336fa29ff2bb4ef291e347e091f7f4a7/jdk-8u141-linux-x64.tar.gz
+    dest: /tmp/jdk-{{ item }}-linux-x64.tar.gz
+    state: file
+    mode: 0755
+    owner: root
+    group: root
+    validate_certs: no
+    headers: "Cookie: oraclelicense=accept-securebackup-cookie"
+  when: check_jdk |failed
+  with_items: "{{ jdk_archive_version }}"
+
+- name: Ensure that the directory exist
+  file:
+    path: /usr/java
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: extract oracle jdk archive
+  shell: tar xzf /tmp/jdk-{{ item }}-linux-x64.tar.gz -C /usr/java
+  when: check_jdk |failed
+  with_items: "{{ jdk_archive_version }}"
+
+#
+# JDKのリンク作成
+#
+- name: アーカイブ 解凍のため
+  pause:
+    seconds: 5
+
+- name: create jdk link
+  file:
+    src: "/usr/java/jdk{{ item }}"
+    dest: "/usr/java/jdk"
+    force: yes
+    state: link
+  ignore_errors: yes
+  with_items: "{{ tomcat_instance_file_templates.bin }}"
+
+#
+# setenv.sh 配置
+#
+- name: include tasks/01.setenv.sh.yml
+  include: 01.setenv.sh.yml

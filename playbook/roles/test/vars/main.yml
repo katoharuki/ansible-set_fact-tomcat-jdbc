@@ -1,0 +1,70 @@
+# 以下バージョンは合わせる
+tomcat_jdk_version: "1.8.0_141"
+jdk_archive_version: "8u141"
+
+tomcat_version: "v8_5_8"
+tomcat_version_dot: "8.5.8"
+tomcat_oracle_version: "11.2.0"
+tomcat_jdbc_version: 6
+
+tomcat_log_path: /var/tomcatlog/dod
+
+tomcat_startup_settings:
+  language: "ja_JP.UTF-8"
+  heap_size:
+    xms: "-Xms256m"
+    xmx: "-Xmx256m"
+  gc_opts:
+    - "-XX:+UseParNewGC"
+    - "-XX:ParallelGCThreads=8"
+    - "-XX:+UseConcMarkSweepGC"
+    - "-XX:NewSize=85m"
+    - "-XX:MaxNewSize=85m"
+    - "-XX:SurvivorRatio=2"
+    - "-XX:MaxTenuringThreshold=15"
+    - "-XX:TargetSurvivorRatio=90"
+  gc_logs:
+    - "-Xloggc:${CATALINA_LOG}/gc.log"
+    - "-XX:+PrintGCDetails"
+    - "-XX:+PrintGCTimeStamps"
+  catalina_opts:
+    - "-XX:MetaspaceSize=128m"
+    - "-XX:MaxMetaspaceSize=128m"
+    - "-XX:ReservedCodeCacheSize=128m"
+    - "-Duser.timezone=Asia/Tokyo"
+    - "-Dspring.profiles.active={{ spring_profiles_active }}" # spring profile
+    - "-Dapplication.fake-date.file-path={{ fake_date_file_path }}" # r2 date
+    - "-Dspring.datasource.url='jdbc:log4jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=hostname)(PORT={{ test_hash }})))(ENABLE=BROKEN)(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=XE)))' "
+    - "-Dspring.datasource.username=XXXXX -Dspring.datasource.password=XXXXX -Dapplication.mail-constants.site-domain=XXX{{ minke_men }}.XXX"
+
+  java_opts:
+    - "-Djava.security.egd=/dev/./urandom"
+
+tomcat_server_directories:
+  - path: "{{ tomcat_log_path }}"
+    owner: "root"
+    group: "root"
+    mode: "755"
+  - path: "/usr/java"
+    owner: "root"
+    group: "root"
+    mode: "755"
+
+tomcat_instance_file_templates:
+  bin:
+    - source: "tomcat/{{ tomcat_version }}/bin/setenv.sh.j2"
+      destination: "/usr/local/tomcat/bin/setenv.sh"
+      owner: "root"
+      group: "root"
+      mode: "755"
+
+# 向き先毎の変数情報を取得
+test1:
+  nodes: 11111
+  men: 1
+test2:
+  nodes: 11112
+  men: 2
+test3:
+  nodes: 11113
+  men: 3

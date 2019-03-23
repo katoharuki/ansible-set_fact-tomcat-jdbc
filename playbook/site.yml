@@ -1,0 +1,6 @@
+- name: ansible hash test
+  hosts: all
+  connection: docker
+  user: root
+  roles:
+    - "test"

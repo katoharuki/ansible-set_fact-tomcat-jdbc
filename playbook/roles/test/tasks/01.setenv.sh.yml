@@ -1,0 +1,29 @@
+# /usr/local/tomcat/bin/setenv.sh　の向き先毎の変数を取得
+- name: get test1 hash
+  set_fact:
+    test_hash: "{{ test1.nodes }}"
+    test_men: "{{ test1.men }}"
+  when: test  == "test1"
+
+# /usr/local/tomcat/bin/setenv.sh　の向き先毎の変数を取得
+- name: get test2 hash
+  set_fact:
+    test_hash: "{{ test2.nodes }}"
+    test_men: "{{ test2.men }}"
+  when: test  == "test2"
+
+# /usr/local/tomcat/bin/setenv.sh　の向き先毎の変数を取得
+- name: get test3 hash
+  set_fact:
+    test_hash: "{{ test3.nodes }}"
+    test_men: "{{ test3.men }}"
+  when: test  == "test3"
+
+- name: create tomcat instance bin files
+  template:
+    src: "{{ item.source }}"
+    dest: "{{ item.destination }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "0{{ item.mode }}"
+  with_items: "{{ tomcat_instance_file_templates.bin }}"
